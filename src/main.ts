@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { OBJLoader } from 'three/addons/loaders/OBJLoader.js';
-import { clamp, normalizeAngle, directionText, elevationText, classifyShot, makePrompt, shotText } from './camera.ts';
+import { clamp, normalizeAngle, directionText, elevationText, classifyShot, makePrompt, shotText, normalizeFocalLength, focalLengthToFov, DEFAULT_FOCAL_LENGTH } from './camera.ts';
 import type { Language } from './camera.ts';
 import './style.css';
 
@@ -10,10 +10,11 @@ const loading = $('loading');
 const prompt = $<HTMLTextAreaElement>('prompt');
 const subject = $<HTMLInputElement>('subject');
 const copy = $<HTMLButtonElement>('copy');
-const sliders = { azimuth: $<HTMLInputElement>('azimuth'), elevation: $<HTMLInputElement>('elevation'), distance: $<HTMLInputElement>('distance') };
+const sliders = { azimuth: $<HTMLInputElement>('azimuth'), elevation: $<HTMLInputElement>('elevation'), distance: $<HTMLInputElement>('distance'), focalLength: $<HTMLInputElement>('focal-length') };
 const angleInputs = { azimuth: $<HTMLInputElement>('azimuth-number'), elevation: $<HTMLInputElement>('elevation-number') };
 const distanceInput = $<HTMLInputElement>('distance-number');
-const state = { azimuth: 30, elevation: 8, distance: 4.8, language: 'en' as Language };
+const focalInput = $<HTMLInputElement>('focal-length-number');
+const state = { focalLength: DEFAULT_FOCAL_LENGTH, azimuth: 30, elevation: 8, distance: 4.8, language: 'en' as Language };
 let minDistance = 1.5;
 let maxDistance = 9;
 let modelHeight = 2.2;
@@ -24,7 +25,7 @@ let renderer: THREE.WebGLRenderer;
 let statusTimer: ReturnType<typeof setTimeout>;
 const scene = new THREE.Scene();
 scene.background = new THREE.Color('#e9ede3');
-const camera = new THREE.PerspectiveCamera(THREE.MathUtils.radToDeg(2 * Math.atan(24 / 100)), 1, .01, 100);
+const camera = new THREE.PerspectiveCamera(focalLengthToFov(DEFAULT_FOCAL_LENGTH), 1, .01, 100);
 const modelPoints: THREE.Vector3[] = [];
 const projected = new THREE.Vector3();
 const group = new THREE.Group();
@@ -52,6 +53,9 @@ function update() {
   state.azimuth = normalizeAngle(state.azimuth);
   state.elevation = clamp(state.elevation, -85, 85);
   state.distance = clamp(state.distance, minDistance, maxDistance);
+  state.focalLength = normalizeFocalLength(state.focalLength);
+  camera.fov = focalLengthToFov(state.focalLength);
+  camera.updateProjectionMatrix();
   const az = THREE.MathUtils.degToRad(state.azimuth);
   const el = THREE.MathUtils.degToRad(state.elevation);
   camera.position.set(Math.sin(az) * Math.cos(el), Math.sin(el), Math.cos(az) * Math.cos(el)).multiplyScalar(state.distance);
@@ -67,10 +71,13 @@ function update() {
   }
   const cropped = Math.max(right, -left, top, -bottom) > 1;
   const shot = classifyShot(Math.max((right - left) / 2, cropped ? 1.01 : 0), (top - bottom) / 2);
-  prompt.value = makePrompt(subject.value, state.azimuth, state.elevation, shot, state.language, { left, right, top, bottom });
+  prompt.value = makePrompt(subject.value, state.azimuth, state.elevation, shot, state.language, { left, right, top, bottom }, state.focalLength);
   $('view-name').textContent = `${directionText(state.azimuth, 'zh')} · ${elevationText(state.elevation, 'zh')}`;
-  const tags = [shotText(shot, 'zh').split('，')[0], elevationText(state.elevation, 'zh'), '50 mm'];
+  const tags = [shotText(shot, 'zh').split('，')[0], elevationText(state.elevation, 'zh'), `${state.focalLength} mm`];
   $('prompt-tags').replaceChildren(...tags.map(text => { const tag = document.createElement('span'); tag.textContent = text; return tag; }));
+  $('focal-length-label').textContent = `${state.focalLength} MM`;
+  sliders.focalLength.value = String(state.focalLength);
+  if (document.activeElement !== focalInput) focalInput.value = String(state.focalLength);
   sliders.azimuth.value = String(state.azimuth);
   sliders.elevation.value = String(state.elevation);
   sliders.distance.value = String(state.distance / modelHeight);
@@ -97,7 +104,7 @@ function resize() {
 }
 
 function reset() {
-  state.azimuth = 30; state.elevation = 8;
+  state.azimuth = 30; state.elevation = 8; state.focalLength = DEFAULT_FOCAL_LENGTH;
   // On narrow viewports fit horizontally as well as vertically.
   state.distance = clamp(modelHeight * Math.max(2.85, 1.7 / camera.aspect), minDistance, maxDistance);
   scheduleRender();
@@ -209,6 +216,20 @@ viewport.addEventListener('keydown', event => {
 sliders.azimuth.addEventListener('input', () => { state.azimuth = Number(sliders.azimuth.value); scheduleRender(); });
 sliders.elevation.addEventListener('input', () => { state.elevation = Number(sliders.elevation.value); scheduleRender(); });
 sliders.distance.addEventListener('input', () => { state.distance = Number(sliders.distance.value) * modelHeight; scheduleRender(); });
+sliders.focalLength.addEventListener('input', () => { state.focalLength = normalizeFocalLength(Number(sliders.focalLength.value)); scheduleRender(); });
+function applyFocalInput(commit: boolean) {
+  if (Number.isFinite(focalInput.valueAsNumber)) {
+    state.focalLength = normalizeFocalLength(focalInput.valueAsNumber);
+    scheduleRender();
+  }
+  if (commit) focalInput.value = String(state.focalLength);
+}
+focalInput.addEventListener('input', () => applyFocalInput(false));
+focalInput.addEventListener('blur', () => applyFocalInput(true));
+focalInput.addEventListener('keydown', event => {
+  if (event.key === 'Enter') { event.preventDefault(); applyFocalInput(true); focalInput.blur(); }
+  if (event.key === 'Escape') { focalInput.value = String(state.focalLength); focalInput.blur(); }
+});
 function displayedAngle(key: 'azimuth' | 'elevation') {
   const rounded = Number(state[key].toFixed(1));
   return String(Number((key === 'azimuth' ? normalizeAngle(rounded) : rounded).toFixed(1)));

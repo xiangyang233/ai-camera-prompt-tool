@@ -1,6 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { directionText, elevationText, makePrompt, classifyShot } from '../src/camera.ts';
+import { PerspectiveCamera, Vector3 } from 'three';
+import { directionText, elevationText, makePrompt, classifyShot, normalizeFocalLength, focalLengthToFov } from '../src/camera.ts';
 
 test('cardinal views agree with the documented subject-relative coordinate system', () => {
   assert.equal(directionText(0, 'zh'), '正面视角');
@@ -93,4 +94,42 @@ test('screen occupancy uses projected visible height and does not exceed 100 per
   const sideCrop = makePrompt('', 90, 0, 'medium', 'en', {left:-1.3, right:1.3, top:.6, bottom:-.6});
   assert.match(sideCrop, /visible portion filling approximately 60%/);
   assert.match(sideCrop, /left and right edges/);
+});
+
+
+test('focal length preserves decimals and safely limits invalid or extreme values', () => {
+  assert.equal(normalizeFocalLength(85.4), 85.4);
+  assert.equal(normalizeFocalLength(-10), 18);
+  assert.equal(normalizeFocalLength(999), 200);
+  assert.equal(normalizeFocalLength(NaN), 50);
+  assert.equal(normalizeFocalLength(Infinity), 50);
+});
+
+test('changing focal length changes projected framing without moving the camera', () => {
+  const camera = new PerspectiveCamera(focalLengthToFov(50), 1, .01, 100);
+  camera.position.set(0, 0, 6);
+  camera.lookAt(0, 0, 0);
+  camera.updateMatrixWorld();
+  const top = new Vector3(0, 1, 0);
+  const normal = top.clone().project(camera).y;
+  assert.ok(Math.abs(camera.fov - 26.9915) < .001);
+  camera.fov = focalLengthToFov(200);
+  camera.updateProjectionMatrix();
+  const telephoto = top.clone().project(camera).y;
+  assert.ok(Math.abs(telephoto / normal - 4) < .0001);
+  assert.equal(classifyShot(normal, normal), 'full');
+  assert.equal(classifyShot(telephoto, telephoto), 'close');
+  camera.fov = focalLengthToFov(18);
+  camera.updateProjectionMatrix();
+  assert.ok(top.clone().project(camera).y < normal);
+  assert.deepEqual(camera.position.toArray(), [0, 0, 6]);
+});
+
+test('both prompt languages use the selected focal length and matching lens class', () => {
+  for (const [mm, zh, en] of [[18, '广角镜头', 'wide-angle lens'], [35, '广角镜头', 'wide-angle lens'], [50, '标准镜头', 'standard lens'], [85.4, '长焦镜头', 'telephoto lens']] as const) {
+    assert.ok(makePrompt('', 30, 20, 'full', 'zh', undefined, mm).includes(`${mm}mm ${zh}`));
+    const english = makePrompt('', 30, 20, 'full', 'en', undefined, mm);
+    assert.ok(english.includes(`${mm}mm ${en}`));
+    if (mm !== 50) assert.ok(!english.includes('50mm'));
+  }
 });

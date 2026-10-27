@@ -3,3 +3,5 @@
 #viewport{height:clamp(300px,calc(100dvh - 340px),530px)}@media(max-width:800px){#viewport{height:410px}}@media(max-width:450px){#viewport{height:370px}}
 #prompt{height:270px;font-size:12px;line-height:1.8;white-space:pre-wrap}@media(max-width:800px){#prompt{height:220px}}
 .control-heading{align-items:center;min-height:29px;margin-bottom:10px}.angle-input{display:inline-flex;align-items:center;gap:4px;color:#536e44;font:11px ui-monospace,monospace}.angle-input input{width:70px;min-width:0;padding:5px 5px 5px 8px;border:1px solid #d7dfce;border-radius:6px;background:#f7f9f2;color:#35513b;font:12px ui-monospace,monospace;text-align:right;outline:none}.angle-input input:focus{border-color:#7e9b68;box-shadow:0 0 0 2px #e8efdf}.angle-help{margin:0;padding:0 23px 16px;font-size:10px;line-height:1.7;color:#8c9782}
+
+.camera-controls{grid-template-columns:repeat(2,minmax(0,1fr))}@media(min-width:1450px){.camera-controls{grid-template-columns:repeat(4,minmax(0,1fr))}}@media(max-width:450px){.camera-controls{grid-template-columns:1fr}}

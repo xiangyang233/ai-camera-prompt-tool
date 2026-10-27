@@ -3,6 +3,23 @@ export type Shot = 'wide' | 'full' | 'medium' | 'close';
 export type FrameBounds = { left: number; right: number; top: number; bottom: number };
 export const clamp = (value: number, min: number, max: number) => Math.min(max, Math.max(min, value));
 export const normalizeAngle = (angle: number) => ((angle % 360) + 360) % 360;
+export const MIN_FOCAL_LENGTH = 18;
+export const MAX_FOCAL_LENGTH = 200;
+export const DEFAULT_FOCAL_LENGTH = 50;
+export function normalizeFocalLength(value: number) {
+  return Number(clamp(Number.isFinite(value) ? value : DEFAULT_FOCAL_LENGTH, MIN_FOCAL_LENGTH, MAX_FOCAL_LENGTH).toFixed(1));
+}
+// Preserve the original 24 mm sensor-height convention, independent of viewport aspect.
+export function focalLengthToFov(focalLength: number) {
+  return 2 * Math.atan(24 / (2 * normalizeFocalLength(focalLength))) * 180 / Math.PI;
+}
+function lensDescription(focalLength: number, language: Language) {
+  const mm = normalizeFocalLength(focalLength);
+  const kind = language === 'zh'
+    ? mm <= 35 ? '广角镜头' : mm < 70 ? '标准镜头' : '长焦镜头'
+    : mm <= 35 ? 'wide-angle lens' : mm < 70 ? 'standard lens' : 'telephoto lens';
+  return `${mm}mm ${kind}`;
+}
 const directions = {
   zh: ['正面视角', '左前方四分之三视角', '主体左侧视角', '左后方四分之三视角', '背面视角', '右后方四分之三视角', '主体右侧视角', '右前方四分之三视角'],
   en: ['front view', "three-quarter view from the subject’s left front", "left-side view of the subject", "three-quarter view from the subject’s left rear", 'back view', "three-quarter view from the subject’s right rear", "right-side view of the subject", "three-quarter view from the subject’s right front"],
@@ -89,8 +106,8 @@ function framingDescription(shot: Shot, language: Language, frame?: FrameBounds)
   return description[shot] + size;
 }
 
-export function makePrompt(subject: string, angle: number, elevation: number, shot: Shot, language: Language, frame?: FrameBounds) {
-  const sentences = [framingDescription(shot, language, frame), directionDescription(angle, elevation, language), elevationDescription(elevation, language), language === 'zh' ? '主体居中，镜头指向主体中心，50mm 标准镜头透视' : 'Centered composition, aimed at the subject center, 50mm lens perspective'];
+export function makePrompt(subject: string, angle: number, elevation: number, shot: Shot, language: Language, frame?: FrameBounds, focalLength = DEFAULT_FOCAL_LENGTH) {
+  const sentences = [framingDescription(shot, language, frame), directionDescription(angle, elevation, language), elevationDescription(elevation, language), language === 'zh' ? `主体居中，镜头指向主体中心，${lensDescription(focalLength, language)}` : `Centered composition, aimed at the subject center, ${lensDescription(focalLength, language)}`];
   const prefix = subject.trim() ? subject.trim() + '\n' : '';
   return prefix + sentences.map(sentence => language === 'en' ? sentence[0].toUpperCase() + sentence.slice(1) : sentence).join(language === 'zh' ? '。' : '. ') + (language === 'zh' ? '。' : '.');
 }

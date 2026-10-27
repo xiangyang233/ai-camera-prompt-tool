@@ -17,7 +17,7 @@
       <div class="intro"><div><p class="eyebrow">A LITTLE CAMERA STUDIO</p><h1>转动视角，让灵感入镜。</h1></div><p class="intro-note">拖动镜头，找到画面。<br />把你的视角变成提示词。</p></div>
       <div class="workspace">
         <section class="studio" aria-label="3D 取景工作台">
-          <div class="studio-bar"><span><i class="live-dot"></i>实时取景</span><span class="mono">50 MM <span class="muted">/</span> ORBIT CAMERA</span></div>
+          <div class="studio-bar"><span><i class="live-dot"></i>实时取景</span><span class="mono"><span id="focal-length-label">50 MM</span> <span class="muted">/</span> ORBIT CAMERA</span></div>
           <div id="viewport" tabindex="0" role="group" aria-label="3D 取景：拖动旋转，滚轮调整距离；方向键旋转，加减键调整距离">
             <div class="frame-corner tl"></div><div class="frame-corner tr"></div><div class="frame-corner bl"></div><div class="frame-corner br"></div>
             <div class="view-caption"><span class="caption-label">CURRENT VIEW</span><strong id="view-name">正在载入模型</strong></div>
@@ -30,8 +30,10 @@
             <div class="control"><div class="control-heading"><label for="azimuth-number">水平环绕</label><span class="angle-input"><input id="azimuth-number" type="number" step="0.1" value="30" aria-label="水平环绕角度（度）" aria-describedby="angle-help" title="输入角度，回车确认；超出一周自动折算" /><span aria-hidden="true">°</span></span></div><input id="azimuth" aria-label="水平环绕" type="range" min="0" max="359.9" step="0.1" value="30" /><div class="range-hints"><span>正面 0°</span><span>背面 180°</span><span>360°</span></div></div>
             <div class="control"><div class="control-heading"><label for="elevation-number">俯仰角度</label><span class="angle-input"><input id="elevation-number" type="number" min="-85" max="85" step="0.1" value="8" aria-label="俯仰角度（度）" aria-describedby="angle-help" title="输入 −85° 至 85°，回车确认" /><span aria-hidden="true">°</span></span></div><input id="elevation" aria-label="俯仰角度" type="range" min="-85" max="85" step="0.1" value="8" /><div class="range-hints"><span>仰拍</span><span>平视</span><span>俯拍</span></div></div>
             <div class="control"><div class="control-heading"><label for="distance-number">镜头距离</label><span class="angle-input"><input id="distance-number" type="number" min="1.25" max="4.5" step="0.01" value="2.85" aria-label="镜头距离（模型高度倍数）" aria-describedby="distance-help" title="输入距离倍数，回车确认" /><span aria-hidden="true">×</span></span></div><input id="distance" aria-label="镜头距离" type="range" min="1.25" max="4.5" step="0.01" value="2.85" /><div class="range-hints"><span>拉近</span><span id="distance-help">相对模型高度</span><span>拉远</span></div></div>
+            <div class="control"><div class="control-heading"><label for="focal-length-number">焦距</label><span class="angle-input"><input id="focal-length-number" type="number" min="18" max="200" step="0.1" value="50" aria-label="焦距（毫米）" aria-describedby="focal-help" title="输入 18～200 mm，回车确认" /><span aria-hidden="true">mm</span></span></div><input id="focal-length" aria-label="焦距" type="range" min="18" max="200" step="0.1" value="50" /><div class="range-hints"><span>18 广角</span><span>50 标准</span><span>200 长焦</span></div></div>
           </div>
-          <p id="angle-help" class="angle-help">角度与距离均可直接输入，回车确认 · 水平角自动折算，俯仰与距离自动限制在可用范围内</p>
+          <p id="focal-help" class="angle-help">焦距改变取景范围，镜头位置保持不变；拉近或拉远请调整距离。</p>
+          <p id="angle-help" class="angle-help">角度、距离与焦距均可直接输入，回车确认 · 超出范围自动调整</p>
         </section>
         <aside class="prompt-panel" aria-label="提示词输出">
           <div class="panel-heading"><div><p class="eyebrow">YOUR CAMERA, IN WORDS</p><h2>镜头提示词</h2></div><span class="panel-icon">↗</span></div>
