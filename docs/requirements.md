@@ -16,6 +16,8 @@
 
 已选择 Kenney Blocky Characters 2.0 的 `character-a`，加载静态 OBJ 和贴图，并在场景中添加简单左侧挎包加强左右辨识。来源和许可见 [第三方资源](third-party-assets.md)。
 
+提示词采用常见摄影术语结合简短自然语言说明，明确相机相对主体的位置、俯仰程度、可见侧面及取景范围。裁切方向取自实际屏幕投影；接近正上方或正下方时强调顶部或底部。零俯仰描述为与主体中心等高，不自动等同于人物眼睛高度。保持通用格式，不增加画风、光照、角色外观或专用模型语法。
+
 ## 1. 产品目标
 
 软件中放置一个具有明确正面、背面、左右侧面和顶部特征的真实 3D 参照模型。以模型中心为环绕中心，设置一台与中心距离可调的虚拟相机。用户通过鼠标让相机绕模型转动、调整俯仰和拉近拉远，查看实际取景，并根据相机最终状态生成 AI 绘画提示词。
@@ -112,11 +114,11 @@
 示例：相机位于主体左前方、高于模型中心，实际取景识别为中景，焦距为 50mm。
 
 ```text
-中景，从主体左前方观察的四分之三视角，俯拍，50mm 镜头
+中景，重点呈现主体中央区域，主体部分超出画面。相机位于主体左前方，以四分之三角度观察，同时呈现正面和左侧。俯拍，相机高于主体中心，向下拍摄。主体居中，镜头指向主体中心，50mm 标准镜头透视。
 ```
 
 ```text
-medium shot, three-quarter view from the subject's left front, high-angle shot, 50mm lens
+Medium shot focused on the central region of the subject, part of the subject extends outside the frame. Three-quarter front view, camera in front and to the subject's left, showing the front and left side. High-angle shot, camera above the subject center, looking downward. Centered composition, camera aimed at the subject center, natural perspective of a 50mm lens.
 ```
 
 ## 7. 实现建议

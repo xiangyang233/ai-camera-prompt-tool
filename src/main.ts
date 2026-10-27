@@ -71,7 +71,7 @@ function update() {
   const delta = lastDirection < 0 ? 180 : Math.abs(((state.azimuth - lastDirection * 45 + 540) % 360) - 180);
   if (lastDirection < 0 || delta > 25.5) lastDirection = nextIndex;
   const descriptionAngle = lastDirection * 45;
-  prompt.value = makePrompt(subject.value, descriptionAngle, state.elevation, shot, state.language);
+  prompt.value = makePrompt(subject.value, descriptionAngle, state.elevation, shot, state.language, { left, right, top, bottom });
   $('view-name').textContent = `${directionText(descriptionAngle, 'zh')} · ${elevationText(state.elevation, 'zh')}`;
   const tags = [shotText(shot, 'zh').split('，')[0], elevationText(state.elevation, 'zh'), '50 mm'];
   $('prompt-tags').replaceChildren(...tags.map(text => { const tag = document.createElement('span'); tag.textContent = text; return tag; }));
