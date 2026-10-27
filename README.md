@@ -41,3 +41,9 @@ npm run preview -- --port 4173
 - [需求档案](docs/requirements.md)：首版范围和后续规划。
 - [第三方资源](docs/third-party-assets.md)：来源、许可、文件和调整说明。
 - [验证记录](docs/verification.md)：构建、核心交互和验证范围。
+
+## 开源许可
+
+项目原创代码与文档采用 [MIT License](LICENSE)。欢迎使用、修改和提交改进。
+
+Kenney 模型和贴图采用独立的 [CC0 许可](public/models/LICENSE.txt)，其来源见[第三方资源清单](docs/third-party-assets.md)。第三方依赖保留各自的许可证。
