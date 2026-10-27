@@ -27,10 +27,11 @@
           </div>
           <div class="camera-toolbar"><div class="quick-views" aria-label="快捷视角"><button type="button" data-angle="0">正面</button><button type="button" data-angle="90">左侧</button><button type="button" data-angle="180">背面</button><button type="button" data-angle="270">右侧</button></div><button type="button" class="reset" id="reset">↺ 重置镜头</button></div>
           <div class="camera-controls">
-            <div class="control"><div class="control-heading"><label for="azimuth">水平环绕</label><output for="azimuth" id="azimuth-value">0°</output></div><input id="azimuth" type="range" min="0" max="359" step="1" value="0" /><div class="range-hints"><span>正面 0°</span><span>背面 180°</span><span>360°</span></div></div>
-            <div class="control"><div class="control-heading"><label for="elevation">俯仰角度</label><output for="elevation" id="elevation-value">0°</output></div><input id="elevation" type="range" min="-85" max="85" step="1" value="0" /><div class="range-hints"><span>仰拍</span><span>平视</span><span>俯拍</span></div></div>
+            <div class="control"><div class="control-heading"><label for="azimuth-number">水平环绕</label><span class="angle-input"><input id="azimuth-number" type="number" step="0.1" value="30" aria-label="水平环绕角度（度）" aria-describedby="angle-help" title="输入角度，回车确认；超出一周自动折算" /><span aria-hidden="true">°</span></span></div><input id="azimuth" aria-label="水平环绕" type="range" min="0" max="359.9" step="0.1" value="30" /><div class="range-hints"><span>正面 0°</span><span>背面 180°</span><span>360°</span></div></div>
+            <div class="control"><div class="control-heading"><label for="elevation-number">俯仰角度</label><span class="angle-input"><input id="elevation-number" type="number" min="-85" max="85" step="0.1" value="8" aria-label="俯仰角度（度）" aria-describedby="angle-help" title="输入 −85° 至 85°，回车确认" /><span aria-hidden="true">°</span></span></div><input id="elevation" aria-label="俯仰角度" type="range" min="-85" max="85" step="0.1" value="8" /><div class="range-hints"><span>仰拍</span><span>平视</span><span>俯拍</span></div></div>
             <div class="control"><div class="control-heading"><label for="distance">镜头距离</label><output for="distance" id="distance-value">—</output></div><input id="distance" type="range" min="1" max="4" step="0.01" value="2" /><div class="range-hints"><span>拉近</span><span>相对模型高度</span><span>拉远</span></div></div>
           </div>
+          <p id="angle-help" class="angle-help">角度可直接输入，回车确认 · 水平角自动折算至一周内，俯仰限于 −85°～85°</p>
         </section>
         <aside class="prompt-panel" aria-label="提示词输出">
           <div class="panel-heading"><div><p class="eyebrow">YOUR CAMERA, IN WORDS</p><h2>镜头提示词</h2></div><span class="panel-icon">↗</span></div>

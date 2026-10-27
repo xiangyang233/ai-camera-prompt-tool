@@ -11,6 +11,7 @@ const prompt = $<HTMLTextAreaElement>('prompt');
 const subject = $<HTMLInputElement>('subject');
 const copy = $<HTMLButtonElement>('copy');
 const sliders = { azimuth: $<HTMLInputElement>('azimuth'), elevation: $<HTMLInputElement>('elevation'), distance: $<HTMLInputElement>('distance') };
+const angleInputs = { azimuth: $<HTMLInputElement>('azimuth-number'), elevation: $<HTMLInputElement>('elevation-number') };
 const state = { azimuth: 30, elevation: 8, distance: 4.8, language: 'en' as Language };
 let minDistance = 1.5;
 let maxDistance = 9;
@@ -75,11 +76,13 @@ function update() {
   $('view-name').textContent = `${directionText(descriptionAngle, 'zh')} · ${elevationText(state.elevation, 'zh')}`;
   const tags = [shotText(shot, 'zh').split('，')[0], elevationText(state.elevation, 'zh'), '50 mm'];
   $('prompt-tags').replaceChildren(...tags.map(text => { const tag = document.createElement('span'); tag.textContent = text; return tag; }));
-  sliders.azimuth.value = String(Math.round(state.azimuth) % 360);
-  sliders.elevation.value = String(Math.round(state.elevation));
+  sliders.azimuth.value = String(state.azimuth);
+  sliders.elevation.value = String(state.elevation);
   sliders.distance.value = String(state.distance / modelHeight);
-  $('azimuth-value').textContent = `${Math.round(state.azimuth) % 360}°`;
-  $('elevation-value').textContent = `${state.elevation > 0 ? '+' : ''}${Math.round(state.elevation)}°`;
+  for (const key of ['azimuth', 'elevation'] as const) {
+    // Preserve unfinished input (e.g. a minus sign or decimal) while the user types.
+    if (document.activeElement !== angleInputs[key]) angleInputs[key].value = displayedAngle(key);
+  }
   $('distance-value').textContent = `${(state.distance / modelHeight).toFixed(2)}×`;
   document.querySelectorAll<HTMLButtonElement>('[data-angle]').forEach(button => {
     const active = Math.abs(normalizeAngle(state.azimuth - Number(button.dataset.angle) + 180) - 180) < 2;
@@ -209,6 +212,30 @@ viewport.addEventListener('keydown', event => {
 sliders.azimuth.addEventListener('input', () => { state.azimuth = Number(sliders.azimuth.value); scheduleRender(); });
 sliders.elevation.addEventListener('input', () => { state.elevation = Number(sliders.elevation.value); scheduleRender(); });
 sliders.distance.addEventListener('input', () => { state.distance = Number(sliders.distance.value) * modelHeight; scheduleRender(); });
+function displayedAngle(key: 'azimuth' | 'elevation') {
+  const rounded = Number(state[key].toFixed(1));
+  return String(Number((key === 'azimuth' ? normalizeAngle(rounded) : rounded).toFixed(1)));
+}
+for (const key of ['azimuth', 'elevation'] as const) {
+  const input = angleInputs[key];
+  const apply = (commit: boolean) => {
+    const value = input.valueAsNumber;
+    if (Number.isFinite(value)) {
+      const angle = key === 'azimuth' ? normalizeAngle(value) : clamp(value, -85, 85);
+      state[key] = Number(angle.toFixed(1));
+      lastDirection = -1;
+      scheduleRender();
+    }
+    // Empty/invalid input keeps the last usable camera angle; restore it on commit.
+    if (commit) input.value = displayedAngle(key);
+  };
+  input.addEventListener('input', () => apply(false));
+  input.addEventListener('blur', () => apply(true));
+  input.addEventListener('keydown', event => {
+    if (event.key === 'Enter') { event.preventDefault(); apply(true); input.blur(); }
+    if (event.key === 'Escape') { input.value = displayedAngle(key); input.blur(); }
+  });
+}
 document.querySelectorAll<HTMLButtonElement>('[data-angle]').forEach(button => button.addEventListener('click', () => {
   state.azimuth = Number(button.dataset.angle); state.elevation = 0; lastDirection = -1; scheduleRender();
 }));
