@@ -6,12 +6,12 @@
     <meta name="theme-color" content="#f4f5f0" />
     <meta name="description" content="环绕一个真实 3D 模型，找到你的镜头，复制 AI 绘画提示词。" />
     <title>取景 · AI 镜头提示词</title>
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="icon" type="image/svg+xml" href="%BASE_URL%favicon.svg" />
   </head>
   <body>
     <header class="topbar">
-      <a class="brand" href="/" aria-label="取景 首页"><span class="brand-mark">⌖</span><span>取景<span class="brand-en">FRAME / PROMPT</span></span></a>
-      <div class="top-note"><span class="status-dot"></span>本地运行<span class="top-divider"></span>CORE 01</div>
+      <a class="brand" href="%BASE_URL%" aria-label="取景 首页"><span class="brand-mark">⌖</span><span>取景<span class="brand-en">FRAME / PROMPT</span></span></a>
+      <div class="top-note"><span class="status-dot"></span>浏览器内运行<span class="top-divider"></span>CORE 01</div>
     </header>
     <main>
       <div class="intro"><div><p class="eyebrow">A LITTLE CAMERA STUDIO</p><h1>转动视角，让灵感入镜。</h1></div><p class="intro-note">拖动镜头，找到画面。<br />把你的视角变成提示词。</p></div>
@@ -45,7 +45,7 @@
           <button id="copy" class="copy-button" type="button" disabled><span>复制提示词</span><span>⧉</span></button>
           <p id="copy-status" class="copy-status" role="status" aria-live="polite">选好视角，就可以带走这个镜头。</p>
           <div class="small-note"><span class="note-icon">i</span><p>左右以主体自身为准，距离转换为画面占比。角度和比例是近似引导，实际成图取决于绘画模型。</p></div>
-          <div class="asset-credit"><span class="credit-label">REFERENCE MODEL</span><strong>Kenney · Blocky Characters</strong><span>CC0 开放资源 · 简单低面数角色</span><a href="/models/LICENSE.txt" target="_blank" rel="noopener">查看模型许可 ↗</a></div>
+          <div class="asset-credit"><span class="credit-label">REFERENCE MODEL</span><strong>Kenney · Blocky Characters</strong><span>CC0 开放资源 · 简单低面数角色</span><a href="%BASE_URL%models/LICENSE.txt" target="_blank" rel="noopener">查看模型许可 ↗</a></div>
         </aside>
       </div>
       <footer><span>从一个角度，开始一幅画。</span><span>鼠标拖动 / 滚轮缩放 / 方向键微调<span class="footer-dot">·</span>无需账号，无需 API</span></footer>

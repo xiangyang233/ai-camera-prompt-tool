@@ -6,9 +6,15 @@
 
 **最新更新：** 已支持角度、距离与焦距数值输入，以及近似角度、画面占比和实际裁切说明。焦距范围为 18～200 mm。完整变更见 [更新日志](CHANGELOG.md)。
 
+## 在线使用
+
+**[打开取景 · AI 镜头提示词工具](https://xiangyang233.github.io/ai-camera-prompt-tool/)**
+
+直接用浏览器打开即可使用，无需安装 Node.js 或下载项目。3D 模型和贴图由站点提供，取景和提示词计算在访问者浏览器内完成；主体文字不会由本工具发送给绘图服务。
+
 ## 使用流程
 
-1. 按下方说明启动本地服务，在浏览器打开工具。
+1. 打开上方在线地址，或按下方说明启动本地服务。
 2. 左键拖动环绕主体，滚轮调整距离，或直接输入角度、距离与焦距。
 3. 查看实时取景；可选填自己的画面主体，并切换中文或英文输出。
 4. 点击“复制提示词”，粘贴到常用 AI 绘画工具中。
@@ -50,6 +56,21 @@ npm run preview -- --port 4173
 - 聚焦取景区后，方向键微调，Shift 加速，加减键改变距离，Home 重置。
 
 首版只实现核心功能。焦距默认为 50mm，可在 18～200mm 间调整（固定 24mm 传感器高度，用于统一视场角计算），俯仰范围为 ±85°，距离为模型高度的 1.25～4.5 倍。模型保持静止，相机朝向整体中心；近距离主要用于中心局部取景，不提供面部自动对焦。景别由模型顶点的屏幕投影粗略分类，AI 成图对视角的遵循程度取决于所用绘图模型。
+
+## GitHub Pages 部署
+
+仓库通过 [Deploy GitHub Pages](https://github.com/xiangyang233/ai-camera-prompt-tool/actions/workflows/deploy-pages.yml) 自动部署：推送到 `main` 后，依次安装依赖、运行测试、构建并发布 `dist/`。也可从 Actions 页面手动运行该工作流。
+
+本地检查与线上相同的子路径构建：
+
+```sh
+npm run build:pages
+npm run preview -- --port 4173 --base=/ai-camera-prompt-tool/
+```
+
+打开 `http://127.0.0.1:4173/ai-camera-prompt-tool/`。普通 `npm run dev` 仍使用根路径。
+
+Fork 后部署时，在仓库 Settings → Pages 中选择 GitHub Actions，并将 `build:pages` 的 `--base` 改为自己的仓库路径。部署流程参考 [Vite 官方 Pages 指南](https://vite.dev/guide/static-deploy.html#github-pages)。
 
 ## 轻量实现
 

@@ -124,8 +124,8 @@ async function init() {
       loading.hidden = false; loading.textContent = '3D 显示已暂停，请刷新页面恢复。';
     });
     const [model, texture] = await Promise.all([
-      new OBJLoader().loadAsync('/models/character-a.obj'),
-      new THREE.TextureLoader().loadAsync('/models/texture-a.png'),
+      new OBJLoader().loadAsync(`${import.meta.env.BASE_URL}models/character-a.obj`),
+      new THREE.TextureLoader().loadAsync(`${import.meta.env.BASE_URL}models/texture-a.png`),
     ]);
     texture.colorSpace = THREE.SRGBColorSpace;
     texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
