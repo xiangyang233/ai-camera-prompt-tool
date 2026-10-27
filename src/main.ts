@@ -12,6 +12,7 @@ const subject = $<HTMLInputElement>('subject');
 const copy = $<HTMLButtonElement>('copy');
 const sliders = { azimuth: $<HTMLInputElement>('azimuth'), elevation: $<HTMLInputElement>('elevation'), distance: $<HTMLInputElement>('distance') };
 const angleInputs = { azimuth: $<HTMLInputElement>('azimuth-number'), elevation: $<HTMLInputElement>('elevation-number') };
+const distanceInput = $<HTMLInputElement>('distance-number');
 const state = { azimuth: 30, elevation: 8, distance: 4.8, language: 'en' as Language };
 let minDistance = 1.5;
 let maxDistance = 9;
@@ -83,7 +84,7 @@ function update() {
     // Preserve unfinished input (e.g. a minus sign or decimal) while the user types.
     if (document.activeElement !== angleInputs[key]) angleInputs[key].value = displayedAngle(key);
   }
-  $('distance-value').textContent = `${(state.distance / modelHeight).toFixed(2)}×`;
+  if (document.activeElement !== distanceInput) distanceInput.value = displayedDistance();
   document.querySelectorAll<HTMLButtonElement>('[data-angle]').forEach(button => {
     const active = Math.abs(normalizeAngle(state.azimuth - Number(button.dataset.angle) + 180) - 180) < 2;
     button.classList.toggle('active', active);
@@ -163,6 +164,9 @@ async function init() {
     sliders.distance.min = String(minDistance / modelHeight);
     sliders.distance.max = String(maxDistance / modelHeight);
     sliders.distance.step = '.01';
+    distanceInput.min = sliders.distance.min;
+    distanceInput.max = sliders.distance.max;
+    distanceInput.title = `输入 ${distanceInput.min}～${distanceInput.max} 倍模型高度，回车确认`;
     ready = true; copy.disabled = false; loading.hidden = true;
     new ResizeObserver(resize).observe(viewport);
     resize(); reset();
@@ -236,6 +240,24 @@ for (const key of ['azimuth', 'elevation'] as const) {
     if (event.key === 'Escape') { input.value = displayedAngle(key); input.blur(); }
   });
 }
+function displayedDistance() {
+  return (state.distance / modelHeight).toFixed(2);
+}
+function applyDistanceInput(commit: boolean) {
+  const value = distanceInput.valueAsNumber;
+  if (Number.isFinite(value)) {
+    const ratio = clamp(value, minDistance / modelHeight, maxDistance / modelHeight);
+    state.distance = Number(ratio.toFixed(2)) * modelHeight;
+    scheduleRender();
+  }
+  if (commit) distanceInput.value = displayedDistance();
+}
+distanceInput.addEventListener('input', () => applyDistanceInput(false));
+distanceInput.addEventListener('blur', () => applyDistanceInput(true));
+distanceInput.addEventListener('keydown', event => {
+  if (event.key === 'Enter') { event.preventDefault(); applyDistanceInput(true); distanceInput.blur(); }
+  if (event.key === 'Escape') { distanceInput.value = displayedDistance(); distanceInput.blur(); }
+});
 document.querySelectorAll<HTMLButtonElement>('[data-angle]').forEach(button => button.addEventListener('click', () => {
   state.azimuth = Number(button.dataset.angle); state.elevation = 0; lastDirection = -1; scheduleRender();
 }));
