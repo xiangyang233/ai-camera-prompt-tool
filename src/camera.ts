@@ -29,24 +29,40 @@ export function classifyShot(width: number, height: number): Shot {
 export function shotText(shot: Shot, language: Language) {
   return ({ zh: {wide:'远景', full:'全景', medium:'中景，局部裁切', close:'近景，局部裁切'}, en: {wide:'wide shot', full:'full shot', medium:'medium shot, cropped framing', close:'close shot, cropped framing'} })[language][shot];
 }
+// Approximate photographic instructions are more useful than scene coordinates.
 function directionDescription(angle: number, elevation: number, language: Language) {
-  const index = directionIndex(angle);
+  const rounded = normalizeAngle(Math.round(normalizeAngle(angle) / 5) * 5);
+  const index = directionIndex(rounded);
+  const side = rounded <= 180 ? 'left' : 'right';
+  const degrees = Math.min(rounded, 360 - rounded);
   const position = language === 'zh'
-    ? ['相机位于主体正前方', '相机位于主体左前方，以四分之三角度观察', '相机位于主体自身左侧，从侧面观察', '相机位于主体左后方，以后侧四分之三角度观察', '相机位于主体正后方，从背面观察', '相机位于主体右后方，以后侧四分之三角度观察', '相机位于主体自身右侧，从侧面观察', '相机位于主体右前方，以四分之三角度观察']
-    : ['Front view, camera directly in front of the subject', "Three-quarter front view, camera in front and to the subject's left", "Left-side view, camera on the subject's own left", "Three-quarter rear view, camera behind and to the subject's left", 'Rear view, camera directly behind the subject', "Three-quarter rear view, camera behind and to the subject's right", "Right-side view, camera on the subject's own right", "Three-quarter front view, camera in front and to the subject's right"];
-  // At steep elevations the top/underside dominates; do not assert lateral surfaces are prominent.
-  if (Math.abs(elevation) >= 60 || index % 2 === 0) return position[index];
+    ? rounded === 0 ? '相机位于主体正前方，水平偏角约 0°'
+      : rounded === 180 ? '相机位于主体正后方，相对正面环绕约 180°'
+      : `从主体正前方朝主体自身${side === 'left' ? '左' : '右'}侧环绕约 ${degrees}°`
+    : rounded === 0 ? 'camera directly in front of the subject, approximately 0° from the front'
+      : rounded === 180 ? 'camera directly behind the subject, approximately 180° from the front'
+      : `camera approximately ${degrees}° around from the front toward the subject's own ${side}`;
+  const label = language === 'zh'
+    ? ['正面视角', '前侧四分之三视角', '左侧视角', '后侧四分之三视角', '背面视角', '后侧四分之三视角', '右侧视角', '前侧四分之三视角'][index]
+    : ['Front view', 'Three-quarter front view', 'Left-side view', 'Three-quarter rear view', 'Rear view', 'Three-quarter rear view', 'Right-side view', 'Three-quarter front view'][index];
+  const base = label + (language === 'zh' ? '，' : ', ') + position;
+  // At steep elevations the top/underside dominates.
+  if (Math.abs(elevation) >= 60 || index % 2 === 0) return base;
   const surfaces = language === 'zh'
     ? { 1: '同时呈现正面和左侧', 3: '同时呈现背面和左侧', 5: '同时呈现背面和右侧', 7: '同时呈现正面和右侧' }
     : { 1: 'showing the front and left side', 3: 'showing the back and left side', 5: 'showing the back and right side', 7: 'showing the front and right side' };
-  return position[index] + (language === 'zh' ? '，' : ', ') + surfaces[index as 1 | 3 | 5 | 7];
+  return base + (language === 'zh' ? '，' : ', ') + surfaces[index as 1 | 3 | 5 | 7];
 }
 
 function elevationDescription(angle: number, language: Language) {
   const descriptions = language === 'zh'
     ? ['相机几乎位于主体正上方，向下拍摄，顶部为主要可见面', '相机明显高于主体中心，以较陡角度向下拍摄', '相机高于主体中心，向下拍摄', '相机略高于主体中心，轻微向下拍摄', '相机与主体中心等高，水平朝向主体中心', '相机略低于主体中心，轻微向上拍摄', '相机低于主体中心，向上拍摄', '相机明显低于主体中心，以较陡角度向上拍摄', '相机几乎位于主体正下方，向上拍摄，底部为主要可见面']
     : ['camera almost directly above, looking down with the top as the dominant visible surface', 'camera well above the subject center, looking steeply downward', 'camera above the subject center, looking downward', 'camera slightly above the subject center, looking gently downward', 'camera at the height of the subject center, aimed horizontally', 'camera slightly below the subject center, looking gently upward', 'camera below the subject center, looking upward', 'camera well below the subject center, looking steeply upward', 'camera almost directly below, looking up with the underside as the dominant visible surface'];
-  return elevationText(angle, language) + (language === 'zh' ? '，' : ', ') + descriptions[elevationIndex(angle)];
+  const degrees = Math.abs(angle) <= 3 ? 0 : Math.round(Math.abs(angle) / 5) * 5;
+  const pitch = language === 'zh'
+    ? `，视线相对水平${degrees === 0 ? '约 0°' : `向${angle > 0 ? '下' : '上'}约 ${degrees}°`}`
+    : `, approximately ${degrees}° ${degrees === 0 ? 'to horizontal' : `${angle > 0 ? 'below' : 'above'} horizontal`}`;
+  return elevationText(angle, language) + (language === 'zh' ? '，' : ', ') + descriptions[elevationIndex(angle)] + pitch;
 }
 
 function framingDescription(shot: Shot, language: Language, frame?: FrameBounds) {
@@ -61,15 +77,20 @@ function framingDescription(shot: Shot, language: Language, frame?: FrameBounds)
   ].filter(edge => edge.clipped) : [];
   // Measured clipping takes precedence over a potentially stale coarse shot classification.
   const effectiveShot = edges.length && (shot === 'full' || shot === 'wide') ? 'medium' : shot;
-  if (edges.length) return description[effectiveShot] + (language === 'zh'
+  // Measure visible screen height, not a world-unit distance or >100% occupancy.
+  const percent = frame ? clamp(Math.round(Math.max(0, Math.min(1, frame.top) - Math.max(-1, frame.bottom)) * 50 / 5) * 5, 5, 100) : null;
+  const size = percent === null ? '' : language === 'zh'
+    ? `，${edges.length ? '主体可见部分' : '主体'}约占画面高度的 ${percent}%`
+    : `, ${edges.length ? 'visible portion' : 'subject'} filling approximately ${percent}% of image height`;
+  if (edges.length) return description[effectiveShot] + size + (language === 'zh'
     ? `，主体超出画面的${edges.map(edge => edge.zh).join('、')}边缘，这些部位被画面裁切`
     : `, the subject extends beyond the ${edges.map(edge => edge.en).join(' and ')} edges and is cropped there`);
   if (!frame && (shot === 'medium' || shot === 'close')) return description[shot] + (language === 'zh' ? '，主体部分超出画面' : ', part of the subject extends outside the frame');
-  return description[shot];
+  return description[shot] + size;
 }
 
 export function makePrompt(subject: string, angle: number, elevation: number, shot: Shot, language: Language, frame?: FrameBounds) {
-  const sentences = [framingDescription(shot, language, frame), directionDescription(angle, elevation, language), elevationDescription(elevation, language), language === 'zh' ? '主体居中，镜头指向主体中心，50mm 标准镜头透视' : 'Centered composition, camera aimed at the subject center, natural perspective of a 50mm lens'];
+  const sentences = [framingDescription(shot, language, frame), directionDescription(angle, elevation, language), elevationDescription(elevation, language), language === 'zh' ? '主体居中，镜头指向主体中心，50mm 标准镜头透视' : 'Centered composition, aimed at the subject center, 50mm lens perspective'];
   const prefix = subject.trim() ? subject.trim() + '\n' : '';
   return prefix + sentences.map(sentence => language === 'en' ? sentence[0].toUpperCase() + sentence.slice(1) : sentence).join(language === 'zh' ? '。' : '. ') + (language === 'zh' ? '。' : '.');
 }

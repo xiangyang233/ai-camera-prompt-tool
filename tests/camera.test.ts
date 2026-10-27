@@ -47,7 +47,7 @@ test('cropping names only the screen edges actually crossed, without a full-body
 
 test('oblique views describe visible sides; steep views prioritize top or underside', () => {
   const oblique = makePrompt('', 45, 8, 'full', 'en');
-  assert.ok(oblique.includes("subject's left"));
+  assert.ok(oblique.includes("subject's own left"));
   assert.ok(oblique.includes('front and left side'));
   assert.ok(oblique.includes('gently downward'));
   const overhead = makePrompt('', 45, 85, 'full', 'en');
@@ -65,4 +65,32 @@ test('camera clauses stay compact and do not invent appearance, lighting or plat
       assert.ok(text.includes('50mm'));
     }
   }
+});
+
+
+test('position uses the actual bearing, approximated to 5 degrees with a subject-relative reference', () => {
+  assert.match(makePrompt('', 30, 20, 'full', 'en'), /30° around from the front toward the subject's own left/);
+  assert.match(makePrompt('', 33.4, 20, 'full', 'zh'), /主体自身左侧环绕约 35°/);
+  for (const angle of [270, -90, 630]) assert.match(makePrompt('', angle, 0, 'full', 'en'), /90° around from the front toward the subject's own right/);
+  for (const angle of [359, 0, 360]) assert.match(makePrompt('', angle, 0, 'full', 'zh'), /水平偏角约 0°/);
+  assert.match(makePrompt('', 180, 0, 'full', 'en'), /180° from the front/);
+});
+
+test('pitch quantifies the viewing direction relative to horizontal', () => {
+  assert.match(makePrompt('', 0, 22, 'full', 'en'), /20° below horizontal/);
+  assert.match(makePrompt('', 0, -22, 'full', 'en'), /20° above horizontal/);
+  assert.match(makePrompt('', 0, 2, 'full', 'en'), /0° to horizontal/);
+  assert.match(makePrompt('', 0, 85, 'full', 'zh'), /相对水平向下约 85°/);
+});
+
+test('screen occupancy uses projected visible height and does not exceed 100 percent when cropped', () => {
+  const normal = makePrompt('', 30, 20, 'full', 'en', {left:-.3, right:.3, top:.72, bottom:-.7});
+  assert.match(normal, /subject filling approximately 70% of image height/);
+  const cropped = makePrompt('', 30, 20, 'close', 'zh', {left:-.5, right:.5, top:1.5, bottom:-1.4});
+  assert.match(cropped, /主体可见部分约占画面高度的 100%/);
+  assert.match(cropped, /上、下边缘/);
+  assert.doesNotMatch(cropped, /完整主体/);
+  const sideCrop = makePrompt('', 90, 0, 'medium', 'en', {left:-1.3, right:1.3, top:.6, bottom:-.6});
+  assert.match(sideCrop, /visible portion filling approximately 60%/);
+  assert.match(sideCrop, /left and right edges/);
 });

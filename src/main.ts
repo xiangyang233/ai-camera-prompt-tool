@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { OBJLoader } from 'three/addons/loaders/OBJLoader.js';
-import { clamp, normalizeAngle, directionIndex, directionText, elevationText, classifyShot, makePrompt, shotText } from './camera.ts';
+import { clamp, normalizeAngle, directionText, elevationText, classifyShot, makePrompt, shotText } from './camera.ts';
 import type { Language } from './camera.ts';
 import './style.css';
 
@@ -21,7 +21,6 @@ let ready = false;
 let scheduled = false;
 let contextLost = false;
 let renderer: THREE.WebGLRenderer;
-let lastDirection = -1;
 let statusTimer: ReturnType<typeof setTimeout>;
 const scene = new THREE.Scene();
 scene.background = new THREE.Color('#e9ede3');
@@ -68,13 +67,8 @@ function update() {
   }
   const cropped = Math.max(right, -left, top, -bottom) > 1;
   const shot = classifyShot(Math.max((right - left) / 2, cropped ? 1.01 : 0), (top - bottom) / 2);
-  // Keep a 3° dead band around direction boundaries during interaction.
-  const nextIndex = directionIndex(state.azimuth);
-  const delta = lastDirection < 0 ? 180 : Math.abs(((state.azimuth - lastDirection * 45 + 540) % 360) - 180);
-  if (lastDirection < 0 || delta > 25.5) lastDirection = nextIndex;
-  const descriptionAngle = lastDirection * 45;
-  prompt.value = makePrompt(subject.value, descriptionAngle, state.elevation, shot, state.language, { left, right, top, bottom });
-  $('view-name').textContent = `${directionText(descriptionAngle, 'zh')} · ${elevationText(state.elevation, 'zh')}`;
+  prompt.value = makePrompt(subject.value, state.azimuth, state.elevation, shot, state.language, { left, right, top, bottom });
+  $('view-name').textContent = `${directionText(state.azimuth, 'zh')} · ${elevationText(state.elevation, 'zh')}`;
   const tags = [shotText(shot, 'zh').split('，')[0], elevationText(state.elevation, 'zh'), '50 mm'];
   $('prompt-tags').replaceChildren(...tags.map(text => { const tag = document.createElement('span'); tag.textContent = text; return tag; }));
   sliders.azimuth.value = String(state.azimuth);
@@ -106,7 +100,6 @@ function reset() {
   state.azimuth = 30; state.elevation = 8;
   // On narrow viewports fit horizontally as well as vertically.
   state.distance = clamp(modelHeight * Math.max(2.85, 1.7 / camera.aspect), minDistance, maxDistance);
-  lastDirection = -1;
   scheduleRender();
 }
 
@@ -227,7 +220,6 @@ for (const key of ['azimuth', 'elevation'] as const) {
     if (Number.isFinite(value)) {
       const angle = key === 'azimuth' ? normalizeAngle(value) : clamp(value, -85, 85);
       state[key] = Number(angle.toFixed(1));
-      lastDirection = -1;
       scheduleRender();
     }
     // Empty/invalid input keeps the last usable camera angle; restore it on commit.
@@ -259,7 +251,7 @@ distanceInput.addEventListener('keydown', event => {
   if (event.key === 'Escape') { distanceInput.value = displayedDistance(); distanceInput.blur(); }
 });
 document.querySelectorAll<HTMLButtonElement>('[data-angle]').forEach(button => button.addEventListener('click', () => {
-  state.azimuth = Number(button.dataset.angle); state.elevation = 0; lastDirection = -1; scheduleRender();
+  state.azimuth = Number(button.dataset.angle); state.elevation = 0; scheduleRender();
 }));
 $('reset').addEventListener('click', reset);
 subject.addEventListener('input', scheduleRender);
