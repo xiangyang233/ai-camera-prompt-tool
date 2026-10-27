@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#f4f5f0" />
+    <meta name="description" content="环绕一个真实 3D 模型，找到你的镜头，复制 AI 绘画提示词。" />
+    <title>取景 · AI 镜头提示词</title>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  </head>
+  <body>
+    <header class="topbar">
+      <a class="brand" href="/" aria-label="取景 首页"><span class="brand-mark">⌖</span><span>取景<span class="brand-en">FRAME / PROMPT</span></span></a>
+      <div class="top-note"><span class="status-dot"></span>本地运行<span class="top-divider"></span>CORE 01</div>
+    </header>
+    <main>
+      <div class="intro"><div><p class="eyebrow">A LITTLE CAMERA STUDIO</p><h1>转动视角，让灵感入镜。</h1></div><p class="intro-note">拖动镜头，找到画面。<br />把你的视角变成提示词。</p></div>
+      <div class="workspace">
+        <section class="studio" aria-label="3D 取景工作台">
+          <div class="studio-bar"><span><i class="live-dot"></i>实时取景</span><span class="mono">50 MM <span class="muted">/</span> ORBIT CAMERA</span></div>
+          <div id="viewport" tabindex="0" role="group" aria-label="3D 取景：拖动旋转，滚轮调整距离；方向键旋转，加减键调整距离">
+            <div class="frame-corner tl"></div><div class="frame-corner tr"></div><div class="frame-corner bl"></div><div class="frame-corner br"></div>
+            <div class="view-caption"><span class="caption-label">CURRENT VIEW</span><strong id="view-name">正在载入模型</strong></div>
+            <div id="loading" role="status">正在准备你的取景台…</div>
+            <div class="axis-label"><span class="axis-icon">⌖</span>固定主体 · 环绕相机</div>
+            <div class="view-guide"><span>↔ 拖动环绕</span><span>↕ 滚轮调距离</span></div>
+          </div>
+          <div class="camera-toolbar"><div class="quick-views" aria-label="快捷视角"><button type="button" data-angle="0">正面</button><button type="button" data-angle="90">左侧</button><button type="button" data-angle="180">背面</button><button type="button" data-angle="270">右侧</button></div><button type="button" class="reset" id="reset">↺ 重置镜头</button></div>
+          <div class="camera-controls">
+            <div class="control"><div class="control-heading"><label for="azimuth">水平环绕</label><output for="azimuth" id="azimuth-value">0°</output></div><input id="azimuth" type="range" min="0" max="359" step="1" value="0" /><div class="range-hints"><span>正面 0°</span><span>背面 180°</span><span>360°</span></div></div>
+            <div class="control"><div class="control-heading"><label for="elevation">俯仰角度</label><output for="elevation" id="elevation-value">0°</output></div><input id="elevation" type="range" min="-85" max="85" step="1" value="0" /><div class="range-hints"><span>仰拍</span><span>平视</span><span>俯拍</span></div></div>
+            <div class="control"><div class="control-heading"><label for="distance">镜头距离</label><output for="distance" id="distance-value">—</output></div><input id="distance" type="range" min="1" max="4" step="0.01" value="2" /><div class="range-hints"><span>拉近</span><span>相对模型高度</span><span>拉远</span></div></div>
+          </div>
+        </section>
+        <aside class="prompt-panel" aria-label="提示词输出">
+          <div class="panel-heading"><div><p class="eyebrow">YOUR CAMERA, IN WORDS</p><h2>镜头提示词</h2></div><span class="panel-icon">↗</span></div>
+          <label class="field-label" for="subject">画面主体 <span>选填</span></label>
+          <input id="subject" maxlength="600" placeholder="例如：a traveler in a forest" autocomplete="off" />
+          <p class="field-help">主体保留原文，镜头描述自动生成。</p>
+          <div class="output-heading"><span class="field-label">输出语言</span><div class="language-switch" aria-label="输出语言"><button id="lang-en" type="button" aria-pressed="true">EN</button><button id="lang-zh" type="button" aria-pressed="false">中文</button></div></div>
+          <div class="prompt-card"><div class="prompt-label"><span class="status-dot"></span>跟随镜头实时更新</div><textarea id="prompt" readonly aria-label="生成的提示词" spellcheck="false" placeholder="模型加载后生成提示词"></textarea><div id="prompt-tags" class="prompt-tags"></div></div>
+          <button id="copy" class="copy-button" type="button" disabled><span>复制提示词</span><span>⧉</span></button>
+          <p id="copy-status" class="copy-status" role="status" aria-live="polite">选好视角，就可以带走这个镜头。</p>
+          <div class="small-note"><span class="note-icon">i</span><p>这里只描述镜头，不生成图片。将提示词粘贴到你常用的 AI 绘画工具中即可。</p></div>
+          <div class="asset-credit"><span class="credit-label">REFERENCE MODEL</span><strong>Kenney · Blocky Characters</strong><span>CC0 开放资源 · 简单低面数角色</span><a href="/models/LICENSE.txt" target="_blank" rel="noopener">查看模型许可 ↗</a></div>
+        </aside>
+      </div>
+      <footer><span>从一个角度，开始一幅画。</span><span>鼠标拖动 / 滚轮缩放 / 方向键微调<span class="footer-dot">·</span>无需账号，无需 API</span></footer>
+    </main>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>

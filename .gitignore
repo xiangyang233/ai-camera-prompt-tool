@@ -9,3 +9,5 @@ coverage/
 Thumbs.db
 .vscode/
 .idea/
+.asset-work/
+.preview/
